@@ -90,23 +90,23 @@ define("WP_CACHE_EXPIRES_AT", 2);
 define("WP_CACHE_EARLY_EXPIRES_AT", 3);
 
 function wp_cache_is_variance_value( $value ) {
-   return($value[0] == "__variance");
+	return($value[0] == "__variance");
 }
 
 function wp_cache_is_expired( $value ) {
-  $time = time();
-  return(
-    $time >= $value[WP_CACHE_EARLY_EXPIRES_AT] &&
-    (
-      $time >= $value[WP_CACHE_EXPIRES_AT]
-      || (
-        (rand(0,100) / 100) < (
-          ($time - $value[WP_CACHE_EARLY_EXPIRES_AT]) /
-            ($value[WP_CACHE_EXPIRES_AT] / $value[WP_CACHE_EARLY_EXPIRES_AT])
-        )
-      )
-    )
-  );
+	$time = time();
+	return(
+		$time >= $value[WP_CACHE_EARLY_EXPIRES_AT] &&
+		(
+			$time >= $value[WP_CACHE_EXPIRES_AT]
+			|| (
+				(rand(0,100) / 100) < (
+					($time - $value[WP_CACHE_EARLY_EXPIRES_AT]) /
+					($value[WP_CACHE_EXPIRES_AT] / $value[WP_CACHE_EARLY_EXPIRES_AT])
+				)
+			)
+		)
+	);
 }
 
 class WP_Object_Cache {
@@ -121,7 +121,7 @@ class WP_Object_Cache {
 	var $stats = array();
 	var $group_ops = array();
 
-  var $variance = 0.25;
+	var $variance = 0.25;
 
 	var $cache_enabled = true;
 	var $default_expiration = 0;
@@ -139,15 +139,15 @@ class WP_Object_Cache {
 		$mc =& $this->get_mc($group);
 		$expire = ($expire == 0) ? $this->default_expiration : $expire;
 
-    if ($expire != 0) {
-      $time = time();
-      $data = array(
-        "__variance",
-        $data,
-        (int) ($time + $expire),
-        (int) (($time + $expire) - ($expire * $this->variance)),
-      );
-    }
+		if ($expire != 0) {
+			$time = time();
+			$data = array(
+				"__variance",
+				$data,
+				(int) ($time + $expire),
+				(int) (($time + $expire) - ($expire * $this->variance)),
+			);
+		}
 
 		$result = $mc->add($key, $data, false, $expire);
 
@@ -239,13 +239,13 @@ class WP_Object_Cache {
 		else
 			$value = $mc->get($key);
 
-    if (wp_cache_is_variance_value($value)) {
-      if (wp_cache_is_expired($value)) {
-        @ $this->group_ops[$group][] = "delete $id";
-        $mc->delete($key);
-      }
-      $value = $value[WP_CACHE_VALUE];
-    }
+		if (wp_cache_is_variance_value($value)) {
+			if (wp_cache_is_expired($value)) {
+				@ $this->group_ops[$group][] = "delete $id";
+				$mc->delete($key);
+			}
+			$value = $value[WP_CACHE_VALUE];
+		}
 
 		@ ++$this->stats['get'];
 		$this->group_ops[$group][] = "get $id";
@@ -279,14 +279,14 @@ class WP_Object_Cache {
 					continue;
 				} else {
 					$return[$key] = $mc->get($key);
-          if (wp_cache_is_variance_value($return[$key])) {
-            if (wp_cache_is_expired($return[$key])) {
-              @ $this->group_ops[$group][] = "delete $id";
-              $mc->delete($key);
-            }
-            $return[$key] = $return[$key][WP_CACHE_VALUE];
-          }
-				}
+					if (wp_cache_is_variance_value($return[$key])) {
+						if (wp_cache_is_expired($return[$key])) {
+							@ $this->group_ops[$group][] = "delete $id";
+							$mc->delete($key);
+						}
+						$return[$key] = $return[$key][WP_CACHE_VALUE];
+					}
+        }
 			}
 			if ( $to_get ) {
 				$vals = $mc->get_multi( $to_get );
@@ -333,15 +333,15 @@ class WP_Object_Cache {
 		$expire = ($expire == 0) ? $this->default_expiration : $expire;
 		$mc =& $this->get_mc($group);
 
-    if ($expire != 0) {
-      $time = time();
-      $data = array(
-        "__variance",
-        $data,
-        (int) ($time + $expire),
-        (int) (($time + $expire) - ($expire * $this->variance)),
-      );
-    }
+		if ($expire != 0) {
+			$time = time();
+			$data = array(
+				"__variance",
+				$data,
+				(int) ($time + $expire),
+				(int) (($time + $expire) - ($expire * $this->variance)),
+			);
+		}
 
 		$result = $mc->set($key, $data, false, $expire);
 

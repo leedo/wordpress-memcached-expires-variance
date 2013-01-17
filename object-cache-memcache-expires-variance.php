@@ -90,7 +90,7 @@ define("WP_CACHE_EXPIRES_AT", 2);
 define("WP_CACHE_EARLY_EXPIRES_AT", 3);
 
 function wp_cache_is_variance_value( $value ) {
-	return($value[0] == "__variance");
+	return(is_array($value) && $value[0] == "__variance");
 }
 
 function wp_cache_is_expired( $value ) {

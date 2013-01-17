@@ -102,7 +102,7 @@ function wp_cache_is_expired( $value ) {
 			|| (
 				(rand(0,100) / 100) < (
 					($time - $value[WP_CACHE_EARLY_EXPIRES_AT]) /
-					($value[WP_CACHE_EXPIRES_AT] / $value[WP_CACHE_EARLY_EXPIRES_AT])
+					($value[WP_CACHE_EXPIRES_AT] - $value[WP_CACHE_EARLY_EXPIRES_AT])
 				)
 			)
 		)

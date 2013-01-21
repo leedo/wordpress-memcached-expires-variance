@@ -86,32 +86,33 @@ function wp_cache_add_non_persistent_groups( $groups ) {
 }
 
 class WP_Cacheable_Object {
-  var $expires_at = 0;
-  var $early_expires_at = 0;
-  var $data = "";
+	var $expires_at = 0;
+	var $early_expires_at = 0;
+	var $value = "";
 
-  function __contruct( $data, $expire, $variance ) {
-    $time = time();
-    $this->data = $data;
+	function __construct( $data, $expire, $variance ) {
+		$time = time();
+		$this->value = $data;
 		$this->expires_at = (int) ($time + $expire);
 		$this->early_expires_at = (int) ($this->expires_at - ($expire * $variance));
-  }
+	}
 
-  function is_expired() {
-	  $time = time();
-	  return(
-		  $time >= $this->early_expires_at &&
-		  (
-			  $time >= $this->expires_at
-			  || (
-				  (rand(0,100) / 100) < (
-					  ($time - $this->early_expires_at) /
-					  ($this->expires_at - $this->early_expires_at)
-				  )
-			  )
-		  )
-	  );
-  }
+	function is_expired() {
+		$time = time();
+
+		return(
+			$time >= $this->early_expires_at &&
+			(
+				$time >= $this->expires_at
+				|| (
+					(rand(0,100) / 100) < (
+						($time - $this->early_expires_at) /
+						($this->expires_at - $this->early_expires_at)
+					)
+				)
+			)
+		);
+	}
 }
 
 class WP_Object_Cache {

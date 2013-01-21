@@ -241,10 +241,11 @@ class WP_Object_Cache {
 
 		if (wp_cache_is_variance_value($value)) {
 			if (wp_cache_is_expired($value)) {
-				@ $this->group_ops[$group][] = "delete $id";
-				$mc->delete($key);
+				$value = false;
 			}
-			$value = $value[WP_CACHE_VALUE];
+			else {
+				$value = $value[WP_CACHE_VALUE];
+			}
 		}
 
 		@ ++$this->stats['get'];
@@ -281,12 +282,13 @@ class WP_Object_Cache {
 					$return[$key] = $mc->get($key);
 					if (wp_cache_is_variance_value($return[$key])) {
 						if (wp_cache_is_expired($return[$key])) {
-							@ $this->group_ops[$group][] = "delete $id";
-							$mc->delete($key);
+							$return[$key] = false;
 						}
-						$return[$key] = $return[$key][WP_CACHE_VALUE];
+						else {
+							$return[$key] = $return[$key][WP_CACHE_VALUE];
+						}
 					}
-        }
+				}
 			}
 			if ( $to_get ) {
 				$vals = $mc->get_multi( $to_get );

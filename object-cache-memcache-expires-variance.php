@@ -85,28 +85,33 @@ function wp_cache_add_non_persistent_groups( $groups ) {
 	$wp_object_cache->add_non_persistent_groups($groups);
 }
 
-define("WP_CACHE_VALUE", 1);
-define("WP_CACHE_EXPIRES_AT", 2);
-define("WP_CACHE_EARLY_EXPIRES_AT", 3);
+class WP_Cacheable_Object {
+  var $expires_at = 0;
+  var $early_expires_at = 0;
+  var $data = "";
 
-function wp_cache_is_variance_value( $value ) {
-	return(is_array($value) && $value[0] == "__variance");
-}
+  function __contruct( $data, $expire, $variance ) {
+    $time = time();
+    $this->data = $data;
+		$this->expires_at = (int) ($time + $expire);
+		$this->early_expires_at = (int) ($this->expires_at - ($expire * $variance));
+  }
 
-function wp_cache_is_expired( $value ) {
-	$time = time();
-	return(
-		$time >= $value[WP_CACHE_EARLY_EXPIRES_AT] &&
-		(
-			$time >= $value[WP_CACHE_EXPIRES_AT]
-			|| (
-				(rand(0,100) / 100) < (
-					($time - $value[WP_CACHE_EARLY_EXPIRES_AT]) /
-					($value[WP_CACHE_EXPIRES_AT] - $value[WP_CACHE_EARLY_EXPIRES_AT])
-				)
-			)
-		)
-	);
+  function is_expired() {
+	  $time = time();
+	  return(
+		  $time >= $this->early_expires_at &&
+		  (
+			  $time >= $this->expires_at
+			  || (
+				  (rand(0,100) / 100) < (
+					  ($time - $this->early_expires_at) /
+					  ($this->expires_at - $this->early_expires_at)
+				  )
+			  )
+		  )
+	  );
+  }
 }
 
 class WP_Object_Cache {
@@ -140,13 +145,7 @@ class WP_Object_Cache {
 		$expire = ($expire == 0) ? $this->default_expiration : $expire;
 
 		if ($expire != 0) {
-			$time = time();
-			$data = array(
-				"__variance",
-				$data,
-				(int) ($time + $expire),
-				(int) (($time + $expire) - ($expire * $this->variance)),
-			);
+			$data = new WP_Cacheable_Object($data, $expire, $this->variance);
 		}
 
 		$result = $mc->add($key, $data, false, $expire);
@@ -239,13 +238,11 @@ class WP_Object_Cache {
 		else
 			$value = $mc->get($key);
 
-		if (wp_cache_is_variance_value($value)) {
-			if (wp_cache_is_expired($value)) {
+		if (is_object($value) && get_class($value) == "WP_Cacheable_Object") {
+			if ($value->is_expired())
 				$value = false;
-			}
-			else {
-				$value = $value[WP_CACHE_VALUE];
-			}
+			else
+				$value = $value->value;
 		}
 
 		@ ++$this->stats['get'];
@@ -280,13 +277,11 @@ class WP_Object_Cache {
 					continue;
 				} else {
 					$return[$key] = $mc->get($key);
-					if (wp_cache_is_variance_value($return[$key])) {
-						if (wp_cache_is_expired($return[$key])) {
+					if (is_object($return[$key]) && get_class($return[$key]) == "WP_Cacheable_Object") {
+						if ($return[$key]->is_expired())
 							$return[$key] = false;
-						}
-						else {
-							$return[$key] = $return[$key][WP_CACHE_VALUE];
-						}
+						else
+							$return[$key] = $return[$key]->value;
 					}
 				}
 			}
@@ -336,13 +331,7 @@ class WP_Object_Cache {
 		$mc =& $this->get_mc($group);
 
 		if ($expire != 0) {
-			$time = time();
-			$data = array(
-				"__variance",
-				$data,
-				(int) ($time + $expire),
-				(int) (($time + $expire) - ($expire * $this->variance)),
-			);
+			$data = new WP_Cacheable_Object($data, $expire, $this->variance);
 		}
 
 		$result = $mc->set($key, $data, false, $expire);
